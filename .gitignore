@@ -1,0 +1,7 @@
+.*~
+*~
+*.nc
+*.png
+__pycache__
+.aviso.credentials
+plots*/
