@@ -6,3 +6,7 @@ __pycache__
 .aviso.credentials
 plots*/
 *.mp4
+*.shp
+*.shx
+*.dbf
+*.cpg
