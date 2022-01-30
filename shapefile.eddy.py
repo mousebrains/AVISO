@@ -53,7 +53,7 @@ def fetchContour(ds:xr.Dataset, row:pd.Series) -> tuple[np.ndarray, np.ndarray, 
             ds.uavg_profile[iObs,:].to_numpy(),
             )
 
-def mkContours(ds:xr.Dataset, info:dict, norm:float, tit:str) -> gpd.GeoDataFrame:
+def mkContours(ds:xr.Dataset, info:dict, tit:str) -> gpd.GeoDataFrame:
     q = np.logical_and.reduce((
         ds.time == info["date"],
         ds.latitude  >= info["latMin"] - 2, # Extra for the contours at the edge
@@ -79,7 +79,7 @@ def mkContours(ds:xr.Dataset, info:dict, norm:float, tit:str) -> gpd.GeoDataFram
             ccLat = cLat * scaling[i] + row.lat
             gdf = gdf.append(gpd.GeoDataFrame(data={
                     "trk": (row.trk,),
-                    "uAvg": (norm * uAvg[i],), 
+                    "uAvg": ("{:.2f}".format(uAvg[i]),), 
                     "contour": (i,),
                     "geometry": (LineString(np.array([ccLon, ccLat]).T),),
                     },
@@ -119,15 +119,16 @@ info = {
         }
 
 items = {
-        "Cyclone": (args.cyclone, args.fnCyclone, 1),
-        "Anticyclone": (args.anticyclone, args.fnAnticyclone, -1),
+        "Cyclone": (args.cyclone, args.fnCyclone),
+        "Anticyclone": (args.anticyclone, args.fnAnticyclone),
         }
 
 for layer in items:
-    (fn, shp, norm) = items[layer]
+    (fn, shp) = items[layer]
     with xr.open_dataset(fn) as ds:
         stime = time.time()
-        gdf = mkContours(ds, info, norm, layer)
+        gdf = mkContours(ds, info, layer)
+        print(gdf)
         print("Took", time.time()-stime, "to build", layer, "data")
         stime = time.time()
         gdf.to_file(shp)
