@@ -1,0 +1,30 @@
+#! /bin/sh
+#
+# Generate plots for ARCTERX Pilot Cruise off Guam
+#
+# Feb-2022, Pat Welch, pat@mousebrains.com
+
+mypath=`dirname $0`
+
+imageDir=$mypath/images
+movieDir=$mypath/movies
+shapeDir=$mypath/shapefiles
+ftpDir=$mypath/data
+
+# References are Guam, Taiwan, and Palau
+
+$mypath/makePlots.py \
+	--ftpSaveTo=$ftpDir \
+	--latMin=10 \
+	--latMax=22.5 \
+	--lonMin=135 \
+	--lonMax=150 \
+	--circle=200 \
+	--circle=400 \
+	--latRef=13.4443 --lonRef=144.7937 \
+	--latRef=23.6978 --lonRef=120.9605 \
+	--latRef=7.5150 --lonRef=134.5825 \
+	--png=$imageDir \
+	--mp4=$movieDir \
+	--shp=$shapeDir \
+	--ftpKeep

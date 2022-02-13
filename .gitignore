@@ -1,12 +1,10 @@
+.DS_store
 .*~
 *~
 *.nc
 *.png
 __pycache__
 .aviso.credentials
-plots*/
-*.mp4
-*.shp
-*.shx
-*.dbf
-*.cpg
+images/
+movies/
+shapefiles/
