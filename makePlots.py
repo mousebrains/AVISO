@@ -123,6 +123,8 @@ class FTPfetch:
             items = {}
             for item in ftp.mlsd(): # Get files to be downloaded, along with their information
                 (fn, info) = item
+                logging.debug("fn %s", fn)
+                logging.debug("info %s", info)
                 if "type" in info and info["type"] == "file":
                     items[fn] = info
                 else:
@@ -374,6 +376,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     Logger.addArgs(parser)
     FTPfetch.addArgs(parser)
+    parser.add_argument("--fetchonly", action="store_true", help="Only do FTP fetch")
     grp = parser.add_argument_group(description="Output related options")
     grp.add_argument("--png", type=str, default="images", help="Output PNG image directory")
     grp.add_argument("--mp4", type=str, default="movies", help="Output MP4 movie directory")
@@ -424,6 +427,9 @@ if __name__ == "__main__":
     os.makedirs(args.ftpSaveTo, mode=0o755, exist_ok=True)
 
     a = FTPfetch(args)
+    if args.fetchonly:
+        logging.info("Only fetching")
+        sys.exit(0)
     images = set()
     with xr.open_dataset(a.cyclonic()) as dsC, xr.open_dataset(a.anticyclonic()) as dsA:
         dsC = pruneData(dsC, sdate, edate, args.latMin, args.latMax, args.lonMin, args.lonMax)
