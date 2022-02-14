@@ -15,7 +15,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon, LinearRing, LineString
 from ftplib import FTP
 import matplotlib.pyplot as plt
-import ffmpeg # To make mp4 movie from png images
+import subprocess # To run ffmpeg for making the movie
 import tempfile
 import json
 import re
@@ -362,15 +362,31 @@ def mkMovie(images:set[str], args:ArgumentParser) -> None:
             logging.info("%s -> %s", os.path.abspath(img), tdir)
             os.symlink(os.path.abspath(img), os.path.join(tdir, os.path.basename(img)))
         logging.info("Building %s", fn)
-        try: # .input(tdir, pattern_type="glob", framerate=args.fps)
-            ffmpeg \
-                    .input(os.path.join(tdir, "*.png"), pattern_type="glob", framerate=args.fps) \
-                    .output(fn, pix_fmt="yuv420p", vcodec="libx264", crf=27) \
-                    .overwrite_output() \
-                    .run()
-                    # .global_args("-report")
-        except:
-            logging.exception("Error building %s", fn)
+        cmd = ["ffmpeg",
+                "-framerate", str(args.fps), # Frame rate in Hz
+                "-pattern_type", "glob", # Glob file pattern
+                "-i", os.path.join(tdir, "*.png"), # Input files
+                "-vcodec", "libx264",
+                "-crf", "27", # Quality, lower is better
+                "-pix_fmt", "yuv420p", # Pixel color format
+                "-y", # answer yes to all questions, i.e. overwrite output
+                fn, # Output filename
+                ]
+        sp = subprocess.run(cmd, shell=False, check=False, capture_output=True)
+        if sp.returncode:
+            logging.error("Executing %s", " ".join(cmd))
+        else:
+            logging.info("%s", "  ".join(cmd))
+        if sp.stdout:
+            try:
+                logging.info("%s", str(sp.stdout, "utf-8"))
+            except:
+                logging.info("%s", sp.stdout)
+        if sp.stderr:
+            try:
+                logging.info("%s", str(sp.stderr, "utf-8"))
+            except:
+                logging.info("%s", sp.stderr)
 
 if __name__ == "__main__":
     parser = ArgumentParser()
