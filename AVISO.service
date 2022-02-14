@@ -1,0 +1,31 @@
+#
+# Fetch new information from AVISO, make new plots, and finally the movie, if needed.
+#
+# N.B. This has two components, AVISO.service and AVISO.timer
+#
+# sudo cp AVISO.* /etc/systemd/system/
+#
+# sudo systemctl daemon-reload
+# sudo systemctl enable AVISO.timer AVISO.service
+# sudo systemctl start AVISO.timer
+#
+# Feb-2022, Pat Welch, pat@mousebrains.com
+
+[Unit]
+Description=AVISO Mesoscale Eddy Product updater
+
+[Service]
+# Launced by timer
+Type=oneshot
+User=pat
+WorkingDirectory=/home/pat/ARCTERX/AVISO
+#
+ExecStart=/home/pat/ARCTERX/AVISO/plot.ARCTERX.pilot \
+	--logfile=/home/pat/logs/AVISO.log \
+	--mailTo="pat@mousebrains.com" \
+	--mailSubject="AVISO" \
+	--verbose
+        
+[Install]
+WantedBy=multi-user.target
+
