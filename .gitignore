@@ -5,6 +5,8 @@
 *.png
 __pycache__
 .aviso.credentials
+ffmpeg*.log
 images/
 movies/
 shapefiles/
+data/
