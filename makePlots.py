@@ -25,9 +25,10 @@ import time
 import sys
 
 class RetrieveFile:
-    def __init__(self, fn:str, targetSize:int, offset:int) -> None:
+    def __init__(self, fn:str, targetSize:int, offset:int, qProgress:bool) -> None:
         self.__filename = fn
         self.__targetSize = targetSize / 1024 / 1024
+        self.__qProgress = qProgress
         self.__fp = None
         self.__size = 0 if offset is None else offset
         self.__frac = None
@@ -47,7 +48,7 @@ class RetrieveFile:
         self.__size += len(data)
         sz = self.__size / 1024 / 1024
         frac = "{:.1f}".format(100 * sz / self.__targetSize)
-        if frac != self.__frac:
+        if not qProgress and (frac != self.__frac):
             logging.info(f"{sz:.1f}/{self.__targetSize:.1f}MB {frac}%")
             self.__frac = frac
 
@@ -59,13 +60,15 @@ class FTPfetch:
             self.__noFetch()
         else:
             self.__Fetch() # Fetch the files if needed
-            if not args.ftpKeep:
-                self.__cleanupFiles()
+        if not args.ftpKeep: # Cleanup old files
+            self.__cleanupFiles()
 
     @staticmethod
     def addArgs(parser:ArgumentParser) -> None:
         grp = parser.add_argument_group(description="FTP fetch related options")
         grp.add_argument("--nofetch", action="store_true", help="Don't fetch new files")
+        grp.add_argument("--noprogress", action="store_true",
+                help="Don't display download progress")
         grp.add_argument("--ftpDirectory", type=str,
                 default="value-added/eddy-trajectory/near-real-time",
                 help="Directory prefix to change to")
@@ -109,8 +112,44 @@ class FTPfetch:
             json.dump(info, fp, indent=4, sort_keys=True)
         return (info["username"], info["password"])
 
+    def __collectFiles(self) -> tuple[set, set]:
+        directory = self.__args.ftpSaveTo
+        old = set()
+        items = {}
+        for fn in os.listdir(directory):
+            matches = re.match("Eddy_trajectory.*_(anticyclonic|cyclonic)_(\d+)_(\d+).nc", fn)
+            if not matches: continue
+            name = matches[1]
+            info = {"filename": os.path.join(directory, fn),
+                    "sdate": matches[2], "edate": matches[3]}
+            if name not in items:
+                items[name] = info
+            elif info["edate"] < items[name]["edate"]: # info is older
+                old.add(info["filename"])
+            elif info["edate"] > items[name]["edate"]: # info is most current
+                old.add(items[name]["filename"])
+                items[name] = info
+            elif info["sdate"] < items[name]["sdate"]: # info starts earlier
+                old.add(items[name]["filename"])
+                items[name] = info
+            else: # info starts later
+                old.add(info["filename"])
+
+        current = set()
+        for name in items: current.add(items[name]["filename"])
+
+        return (current, old)
+
     def __cleanupFiles(self) -> None:
-        pass
+        (current, toDelete) = self.__collectFiles()
+        logging.info("current %s", current)
+        logging.info("toDelete %s", toDelete)
+        for fn in toDelete:
+            logging.info("Deleting %s", fn)
+            os.unlink(fn)
+
+    def __noFetch(self) -> None:
+        (self.__files, toDelete) = self.__collectFiles()
 
     def __Fetch(self) -> None:
         (username, password) = self.__getCredentials()
@@ -148,13 +187,8 @@ class FTPfetch:
                 else:
                     logging.info("%s fetching {:.1f}MB".format(sz/1024/1024), fn)
  
-                obj = RetrieveFile(fnOut, sz, offset)
+                obj = RetrieveFile(fnOut, sz, offset, not args.noProgress)
                 ftp.retrbinary(f"RETR {fn}", obj.block, blocksize=65536, rest=offset)
-    def __noFetch(self) -> None:
-        directory = self.__args.ftpSaveTo
-        for fn in os.listdir(directory):
-            if re.fullmatch(r".+_(anticyclonic|cyclonic)_\d+_\d+[.]nc$", fn):
-                self.__files.add(os.path.join(directory, fn))
 
 def greatCircle(lon0:np.array, lat0:np.array, lon1:np.array, lat1:np.array, re=3443.92):
     ''' Radius of earth in nautical miles '''
