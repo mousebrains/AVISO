@@ -405,6 +405,7 @@ def mkMovie(images:set[str], args:ArgumentParser) -> None:
                 "-vcodec", "libx264",
                 "-crf", "27", # Quality, lower is better
                 "-pix_fmt", "yuv420p", # Pixel color format
+                "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", # Make sure both dimensions are even
                 "-y", # answer yes to all questions, i.e. overwrite output
                 fn, # Output filename
                 ]
