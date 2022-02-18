@@ -28,5 +28,5 @@ $mypath/makePlots.py \
 	--png=$imageDir \
 	--mp4=$movieDir \
 	--shp=$shapeDir \
-	--ftpKeep \
+	--noprogress \
 	$*
