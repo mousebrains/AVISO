@@ -21,8 +21,8 @@ $mypath/makePlots.py \
 	--latMax=31 \
 	--lonMin=-100 \
 	--lonMax=-80 \
-	--latRef=29.2469 --lonRef=90.6615 \
-	--latRef=29.3013 --lonRef=94.7977 \
+	--latRef=29.2469 --lonRef=-90.6615 \
+	--latRef=29.3013 --lonRef=-94.7977 \
 	--circle=100 \
 	--circle=200 \
 	--png=$imageDir \
