@@ -142,8 +142,6 @@ class FTPfetch:
 
     def __cleanupFiles(self) -> None:
         (current, toDelete) = self.__collectFiles()
-        logging.info("current %s", current)
-        logging.info("toDelete %s", toDelete)
         for fn in toDelete:
             logging.info("Deleting %s", fn)
             os.unlink(fn)
