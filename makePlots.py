@@ -301,6 +301,10 @@ def mkContours(ds:xr.Dataset, date:np.datetime64) -> gpd.GeoDataFrame:
         norm = np.linspace(1, 0, uAvg.size, endpoint=False); # [1,0)
         latContour = np.outer(latContour, norm) + float(row.latitude)
         lonContour = np.outer(lonContour, norm) + float(row.longitude)
+        # Wrap lonContour to [-180,180)
+        lonContour = np.fmod(lonContour + 180, 360)
+        lonContour[lonContour < 0] += 360 
+        lonContour -= 180
         for i in range(uAvg.size): # Walk through contours
             df = df.append(gpd.GeoDataFrame(data={
                 "trk": (int(row.track),),
@@ -456,8 +460,8 @@ if __name__ == "__main__":
             ) and (len(args.latRef) != len(args.lonRef)):
         parser.error("You must specify the same number of instances of --latRef and --lonRef")
 
-    edate = np.datetime64(datetime.date.today() - datetime.timedelta(days=15)
-            if args.edate is None else args.edate)
+    edate = np.datetime64(datetime.date.today() - datetime.timedelta(days=14)) \
+            if args.edate is None else np.datetime64(args.edate)
     sdate = edate - np.timedelta64(args.ndays, "D")
 
     if args.latRef is None:
