@@ -49,7 +49,7 @@ class RetrieveFile:
         self.__size += len(data)
         sz = self.__size / 1024 / 1024
         frac = "{:.1f}".format(100 * sz / self.__targetSize)
-        if not qProgress and (frac != self.__frac):
+        if not self.__qProgress and (frac != self.__frac):
             logging.info(f"{sz:.1f}/{self.__targetSize:.1f}MB {frac}%")
             self.__frac = frac
 
@@ -186,7 +186,7 @@ class FTPfetch:
                 else:
                     logging.info("%s fetching {:.1f}MB".format(sz/1024/1024), fn)
  
-                obj = RetrieveFile(fnOut, sz, offset, not args.noProgress)
+                obj = RetrieveFile(fnOut, sz, offset, not args.noprogress)
                 ftp.retrbinary(f"RETR {fn}", obj.block, blocksize=65536, rest=offset)
 
 def mkCircles(radi:tuple[float], dist2lon:Dist2Lon, dist2lat:Dist2Lat,
