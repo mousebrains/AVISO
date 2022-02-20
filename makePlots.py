@@ -7,6 +7,7 @@
 # Feb-2020, Pat Welch, pat@mousebrains.com
 
 from TPWUtils import Logger
+from TPWUtils.GreatCircle import Dist2Lon, Dist2Lat
 import logging
 from argparse import ArgumentParser
 import xarray as xr
@@ -187,42 +188,6 @@ class FTPfetch:
  
                 obj = RetrieveFile(fnOut, sz, offset, not args.noProgress)
                 ftp.retrbinary(f"RETR {fn}", obj.block, blocksize=65536, rest=offset)
-
-def greatCircle(lon0:np.array, lat0:np.array, lon1:np.array, lat1:np.array, re=3443.92):
-    ''' Radius of earth in nautical miles '''
-    lon0 = np.radians(lon0)
-    lat0 = np.radians(lat0)
-    lon1 = np.radians(lon1)
-    lat1 = np.radians(lat1)
-    return re * np.arccos( \
-            np.sin(lat0) * np.sin(lat1) + \
-            np.cos(lat0) * np.cos(lat1) * np.cos(lon0 - lon1) \
-            )
-
-class DistanceDegree:
-    def __init__(self, distPerDeg:float, degRef:float) -> None:
-        self.distPerDeg = distPerDeg
-        self.__degRef = degRef
-
-    def __repr__(self) -> str:
-        return f"{self.distPerDeg} NM/deg"
-
-    def reference(self) -> float:
-        return self.__degRef
-
-    def deg2dist(self, deg:np.array) -> np.array:
-        return (deg - self.__degRef) * self.distPerDeg
-
-    def dist2deg(self, dist:np.array) -> np.array:
-        return self.__degRef + dist / self.distPerDeg
-
-class Dist2Lon(DistanceDegree):
-    def __init__(self, latRef:float, lonRef:float) -> None:
-        DistanceDegree.__init__(self, greatCircle(lonRef-0.5, latRef, lonRef+0.5, latRef), lonRef)
-
-class Dist2Lat(DistanceDegree):
-    def __init__(self, latRef:float, lonRef:float) -> None:
-        DistanceDegree.__init__(self, greatCircle(lonRef, latRef-0.5, lonRef, latRef+0.5), latRef)
 
 def mkCircles(radi:tuple[float], dist2lon:Dist2Lon, dist2lat:Dist2Lat,
         n:int=1000) -> gpd.GeoDataFrame:
