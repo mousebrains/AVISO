@@ -7,7 +7,7 @@
 # Feb-2020, Pat Welch, pat@mousebrains.com
 
 from TPWUtils import Logger
-from TPWUtils.GreatCircle import Dist2Lon, Dist2Lat
+from TPWUtils.GreatCircle import Dist2Lon, Dist2Lat, Radius
 import logging
 from argparse import ArgumentParser
 import xarray as xr
@@ -434,8 +434,8 @@ if __name__ == "__main__":
         dist2lon = None
         dist2lat = None
     else:
-        dist2lon = Dist2Lon(args.latRef[0], args.lonRef[0])
-        dist2lat = Dist2Lat(args.latRef[0], args.lonRef[0])
+        dist2lon = Dist2Lon(args.latRef[0], args.lonRef[0], Radius.NauticalMiles)
+        dist2lat = Dist2Lat(args.latRef[0], args.lonRef[0], Radius.NauticalMiles)
 
     circles = mkCircles(args.circle, dist2lon, dist2lat)
 
