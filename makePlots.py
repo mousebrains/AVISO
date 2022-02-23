@@ -281,7 +281,8 @@ def mkContours(ds:xr.Dataset, date:np.datetime64) -> gpd.GeoDataFrame:
     return (df, track)
 
 def doDate(dsC:xr.Dataset, dsA:xr.Dataset, date:np.datetime64, args:ArgumentParser,
-        dist2lat:Dist2Lat, dist2lon:Dist2Lon, circles:gpd.GeoDataFrame) -> str:
+        dist2lat:Dist2Lat, dist2lon:Dist2Lon, circles:gpd.GeoDataFrame,
+        eez:gpd.GeoDataFrame) -> str:
     # Check to see if I need to make an image/shapefile
 
     png = os.path.join(args.png, f"{date}.png")
@@ -312,8 +313,18 @@ def doDate(dsC:xr.Dataset, dsA:xr.Dataset, date:np.datetime64, args:ArgumentPars
     else:
         figRatio = 1
 
+    tit = [np.datetime_as_string(date),
+            "Blue-cyclonic",
+            "Red-anticyclonic",
+            ]
+
     (fig, ax) = plt.subplots(1,1, figsize=10 * np.array([1, figRatio]))
-    if circles is not None: circles.plot(ax=ax, color="grey")
+    if eez is not None: 
+        eez.plot(ax=ax, color="green")
+        tit.append("Green-EEZ")
+    if circles is not None:
+        circles.plot(ax=ax, color="grey")
+        tit.append("Grey-Circle")
     ax.plot(np.array(args.lonRef), np.array(args.latRef), "8k")
     contourC.plot(ax=ax, column="uAvg", vmin=0, vmax=0.5, cmap="Blues")
     contourA.plot(ax=ax, column="uAvg", vmin=0, vmax=0.5, cmap="Reds")
@@ -328,7 +339,7 @@ def doDate(dsC:xr.Dataset, dsA:xr.Dataset, date:np.datetime64, args:ArgumentPars
         ax.set_aspect(aspectRatio)
         ax2 = ax.secondary_xaxis("top",   functions=(dist2lon.deg2dist, dist2lon.dist2deg))
         ax3 = ax.secondary_yaxis("right", functions=(dist2lat.deg2dist, dist2lat.dist2deg))
-        ax2.set_xlabel(np.datetime_as_string(date) + " Blue-cyclonic, Red-anticyclonic")
+        ax2.set_xlabel(", ".join(tit))
         ax3.set_ylabel("NM")
     logging.info("Saving %s", png)
     plt.savefig(fname=png, dpi=args.dpi)
@@ -416,6 +427,8 @@ if __name__ == "__main__":
             help="Geometric reference longitude, decimal degrees")
     grp.add_argument("--circle", type=float, action="append",
             help="Circles of this many nautical miles about lat/lonRef[0]")
+    grp.add_argument("--eez", type=str, 
+            help="Filename of exclusive economic zone boundery geopackage file")
     args = parser.parse_args()
 
     Logger.mkLogger(args, fmt="%(asctime)s %(levelname)s: %(message)s", logLevel="INFO")
@@ -438,6 +451,7 @@ if __name__ == "__main__":
         dist2lat = Dist2Lat(args.latRef[0], args.lonRef[0], Radius.NauticalMiles)
 
     circles = mkCircles(args.circle, dist2lon, dist2lat)
+    eez = None if args.eez is None else gpd.read_file(args.eez)
 
     os.makedirs(args.png, mode=0o755, exist_ok=True)
     os.makedirs(args.mp4, mode=0o755, exist_ok=True)
@@ -454,7 +468,7 @@ if __name__ == "__main__":
         dsA = pruneData(dsA, sdate, edate, args.latMin, args.latMax, args.lonMin, args.lonMax)
         for date in np.arange(sdate, edate+np.timedelta64(1,"D")): # Loop over dates making images
             # Generate the image for a date, if needed
-            fn = doDate(dsC, dsA, date, args, dist2lat, dist2lon, circles)
+            fn = doDate(dsC, dsA, date, args, dist2lat, dist2lon, circles, eez)
             if fn is not None:
                 images.add(fn)
 
