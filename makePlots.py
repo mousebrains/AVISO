@@ -96,14 +96,16 @@ class FTPfetch:
         raise Exception("No anticyclonic files found")
 
     def __getCredentials(self) -> tuple[str, str]:
+        fn = self.__args.ftpCredentials
         try:
-            with open(self.__args.ftpCredentials, "r") as fp:
+            with open(fn, "r") as fp:
                 info = json.load(fp)
                 if "username" in info and "password" in info:
                     return (info["username"], info["password"])
                 logging.error("%s is not properly formated", fn)
         except Exception as e:
             logging.warning("Unable to open %s, %s", fn, str(e))
+
         logging.info("Going to build a fresh AVISO credentials file, %s", fn)
         info = {
             "username": input("Enter usrname:"),
