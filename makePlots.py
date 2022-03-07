@@ -80,7 +80,7 @@ class FTPfetch:
         grp.add_argument("--ftpHost", type=str, metavar="foo.bar.com",
                 default="ftp-access.aviso.altimetry.fr",
                 help="Fully qualified hostname to connect to")
-        grp.add_argument("--ftpCredentials", type=str, default=".aviso.credentials",
+        grp.add_argument("--ftpCredentials", type=str, default="~/.config/AVISO/.aviso.credentials",
                 help="Name of JSON file containinng the AVISO credentials")
 
     def cyclonic(self) -> str:
@@ -111,6 +111,9 @@ class FTPfetch:
             "username": input("Enter usrname:"),
             "password": input("Enter password:"),
             }
+
+        os.makedirs(os.dirname(fn), mode=0o700, exist_ok=True)
+
         with open(fn, "w") as fp:
             json.dump(info, fp, indent=4, sort_keys=True)
         return (info["username"], info["password"])
