@@ -11,9 +11,12 @@ movieDir=$mypath/movies
 shapeDir=$mypath/shapefiles
 ftpDir=$mypath/data
 
+CREDENTIALS=/home/pat/.config/AVISO/.aviso.credentials
+
 # References are Guam, Taiwan, and Palau
 
 $mypath/makePlots.py \
+	--ftpCredentials=$CREDENTIALS \
 	--ndays=60 \
 	--edate=2021-08-01 \
 	--ftpSaveTo=$ftpDir \

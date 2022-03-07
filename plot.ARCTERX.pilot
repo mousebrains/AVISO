@@ -5,15 +5,19 @@
 # Feb-2022, Pat Welch, pat@mousebrains.com
 
 mypath=`dirname $0`
+SYNCPATH=/home/pat/Sync.ARCTERX/Shore/AVISO
 
-imageDir=$mypath/images
-movieDir=$mypath/movies
-shapeDir=$mypath/shapefiles
+imageDir=$SYNCPATH/images
+movieDir=$SYNCPATH/movies
+shapeDir=$SYNCPATH/shapefiles
 ftpDir=$mypath/data
+
+CREDENTIALS=/home/pat/.config/AVISO/.aviso.credentials
 
 # References are Guam, Tinian, Taiwan, and Palau
 
 $mypath/makePlots.py \
+	--ftpCredentials=$CREDENTIALS \
 	--ndays=60 \
 	--ftpSaveTo=$ftpDir \
 	--latMin=10 \
