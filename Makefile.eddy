@@ -1,0 +1,32 @@
+# Generate images in parallel
+# 
+SDATE=2018-08-01
+EDATE=2022-10-23
+NDAYS = 20
+
+TARGETS = $(shell ./mkTargets.py --step=$(NDAYS) $(SDATE) $(EDATE))
+
+all: $(TARGETS)
+
+%.png:
+	./makePlots.py \
+	--nofetch \
+	--skipmovies \
+	--png=images \
+	--dpi=300 \
+	--fps=4 \
+	--ftpSaveTo=data \
+	--ndays=$(NDAYS) \
+	--edate=$(basename $(notdir $@)) \
+	--latMin=5 \
+	--latMax=30 \
+	--lonMin=116 \
+	--lonMax=146 \
+	--latRef=7.5150 --lonRef=134.5825 \
+	--latRef=13.4443 --lonRef=144.7937 \
+	--latRef=23.6978 --lonRef=120.9605 \
+	--circle=200 \
+	--circle=400 \
+	--circle=600 \
+	--eez=eez_boundaries_v11.gpkg 
+
