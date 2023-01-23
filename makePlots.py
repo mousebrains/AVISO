@@ -110,11 +110,11 @@ class FTPfetch:
 
         logging.info("Going to build a fresh AVISO credentials file, %s", fn)
         info = {
-            "username": input("Enter usrname:"),
+            "username": input("Enter username:"),
             "password": input("Enter password:"),
             }
 
-        os.makedirs(os.dirname(fn), mode=0o700, exist_ok=True)
+        os.makedirs(os.path.dirname(fn), mode=0o700, exist_ok=True)
 
         with open(fn, "w") as fp:
             json.dump(info, fp, indent=4, sort_keys=True)
@@ -350,6 +350,7 @@ def doDate(dsC:xr.Dataset, dsA:xr.Dataset, date:np.datetime64, args:ArgumentPars
         ax3.set_ylabel("NM")
     logging.info("Saving %s", png)
     plt.savefig(fname=png, dpi=args.dpi)
+    plt.close(fig)
     return png
 
 def mkMovie(images:set[str], args:ArgumentParser) -> None:
@@ -357,7 +358,7 @@ def mkMovie(images:set[str], args:ArgumentParser) -> None:
     dates = {}
     for img in images:
         (date, ext) = os.path.splitext(os.path.basename(img))
-        dates[np.datetime64(date)] = {"fn": img}
+        dates[np.datetime64(date)] = os.path.abspath(img)
     sdate = min(dates)
     edate = max(dates)
     fn = os.path.join(args.mp4, f"{sdate}.{edate}.mp4")
@@ -377,14 +378,17 @@ def mkMovie(images:set[str], args:ArgumentParser) -> None:
             return
     logging.info("Rebuilding %s", fn)
     with tempfile.TemporaryDirectory() as tdir:
-        for img in images:
-            logging.info("%s -> %s", os.path.abspath(img), tdir)
-            os.symlink(os.path.abspath(img), os.path.join(tdir, os.path.basename(img)))
+        cnt = 0
+        for t in sorted(dates):
+            img = dates[t]
+            ofn = os.path.abspath(os.path.join(tdir, f"{cnt:04d}.png"))
+            logging.info("%s -> %s", img, ofn)
+            os.symlink(img, ofn)
+            cnt += 1
         logging.info("Building %s", fn)
         cmd = ["ffmpeg",
                 "-framerate", str(args.fps), # Frame rate in Hz
-                "-pattern_type", "glob", # Glob file pattern
-                "-i", os.path.join(tdir, "*.png"), # Input files
+                "-i", os.path.join(tdir, "%04d.png"), # Input files
                 "-vcodec", "libx264",
                 "-crf", "27", # Quality, lower is better
                 "-pix_fmt", "yuv420p", # Pixel color format
