@@ -18,9 +18,9 @@ Description=AVISO Mesoscale Eddy Product updater
 # Launced by timer
 Type=oneshot
 User=pat
-WorkingDirectory=/home/pat/ARCTERX/AVISO
+WorkingDirectory=/home/pat/logs
 #
-ExecStart=/home/pat/ARCTERX/AVISO/plot.ARCTERX.2023 \
+ExecStart=/home/pat/AVISO/plot.ARCTERX.2023 \
 	--logfile=/home/pat/logs/AVISO.log \
 	--mailTo="pat@mousebrains.com" \
 	--mailSubject="AVISO" \
