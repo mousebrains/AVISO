@@ -217,24 +217,23 @@ def mkCircles(radi:tuple[float], dist2lon:Dist2Lon, dist2lat:Dist2Lat,
 
 def pruneData(ds:xr.Dataset, sdate:np.datetime64, edate:np.datetime64,
         latMin:float, latMax:float, lonMin:float, lonMax:float) -> xr.Dataset:
+    # Prune in time
     q = np.logical_and(
             ds.time >= (sdate - np.timedelta64(30, "D")),
             ds.time <= edate)
     ds = ds.sel(obs=ds.obs[q])
 
-    # Latitude [-90,90]
+    # Prune in latitude [-90,90]
     q = np.logical_and(ds.latitude >= latMin-1, ds.latitude <= latMax+1)
     ds = ds.sel(obs=ds.obs[q])
 
-    # longitude is nominally [0,360), but when it crosses the meridian, it is not wrapped
-    # so wrap it
-    lonMin = np.fmod(lonMin-1, 360) # Map to (-360,360)
-    lonMax = np.fmod(lonMax+1, 360)
-    lon = np.fmod(ds.longitude, 360)
-    lonMin += 360 if lonMin < 0 else 0
-    lonMax += 360 if lonMax < 0 else 0
-    lon[lon<0] += 360
-    q = np.logical_and(lon >= lonMin, lon <= lonMax)
+    # Handle the eddy walking across the prime merdian
+    ds.longitude = np.remainder(ds.longitude) # Wrap to [0, 360)
+
+    # This will fail for lonMin/Max that span the prime merdian
+    lonMin = np.remainder(lonMin, 360) # Map to [0,360)
+    lonMax = np.remainder(lonMax, 360) # Map to [0, 360)
+    q = np.logical_and(ds.longitude >= lonMin, ds.longitude <= lonMax)
     return ds.sel(obs=ds.obs[q])
 
 def getContour(row:xr.Dataset, ds:xr.Dataset) -> xr.DataArray:
