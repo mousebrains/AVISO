@@ -20,7 +20,7 @@ Type=oneshot
 User=pat
 WorkingDirectory=/home/pat/ARCTERX/AVISO
 #
-ExecStart=/home/pat/ARCTERX/AVISO/plot.ARCTERX.pilot \
+ExecStart=/home/pat/ARCTERX/AVISO/plot.ARCTERX.2023 \
 	--logfile=/home/pat/logs/AVISO.log \
 	--mailTo="pat@mousebrains.com" \
 	--mailSubject="AVISO" \

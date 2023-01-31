@@ -1,0 +1,41 @@
+#! /bin/sh
+#
+# Generate plots for ARCTERX Pilot Cruise off Guam
+#
+# Feb-2022, Pat Welch, pat@mousebrains.com
+
+mypath=`dirname $0`
+# SYNCPATH=/home/pat/Sync.ARCTERX/Shore/AVISO
+SYNCPATH=/home/pat/public_html/AVISO
+
+imageDir=$SYNCPATH/images
+movieDir=$SYNCPATH/movies
+shapeDir=$SYNCPATH/shapefiles
+# ftpDir=$mypath/data
+ftpDir=$SYNCPATH/data
+
+CREDENTIALS=/home/pat/.config/AVISO/.aviso.credentials
+
+# References are Guam, Tinian, Taiwan, and Palau
+
+$mypath/makePlots.py \
+	--ftpCredentials=$CREDENTIALS \
+	--ndays=120 \
+	--ftpSaveTo=$ftpDir \
+	--eez=eez_boundaries_v11.gpkg \
+	--latMin=5 \
+	--latMax=30 \
+	--lonMin=116 \
+	--lonMax=150 \
+	--latRef=7.5150 --lonRef=134.5825 \
+	--latRef=13.4443 --lonRef=144.7937 \
+	--latRef=15.0043 --lonRef=145.6357 \
+	--latRef=23.6978 --lonRef=120.9605 \
+	--circle=200 \
+	--circle=400 \
+	--circle=600 \
+	--png=$imageDir \
+	--mp4=$movieDir \
+	--shp=$shapeDir \
+	--noprogress \
+	$*

@@ -7,7 +7,7 @@
 # Feb-2020, Pat Welch, pat@mousebrains.com
 
 from TPWUtils import Logger
-from TPWUtils.GreatCircle import Dist2Lon, Dist2Lat, Radius
+from TPWUtils.GreatCircle import Dist2Lon, Dist2Lat, Units
 import logging
 from argparse import ArgumentParser
 import xarray as xr
@@ -197,7 +197,7 @@ class FTPfetch:
                 ftp.retrbinary(f"RETR {fn}", obj.block, blocksize=65536, rest=offset)
 
 def mkCircles(radi:tuple[float], dist2lon:Dist2Lon, dist2lat:Dist2Lat,
-        n:int=1000) -> gpd.GeoDataFrame:
+              n:int=1000) -> gpd.GeoDataFrame:
     if radi is None or dist2lon is None: return None
 
     theta = np.linspace(-np.pi, np.pi, n)
@@ -465,8 +465,8 @@ if __name__ == "__main__":
         dist2lon = None
         dist2lat = None
     else:
-        dist2lon = Dist2Lon(args.latRef[0], args.lonRef[0], Radius.NauticalMiles)
-        dist2lat = Dist2Lat(args.latRef[0], args.lonRef[0], Radius.NauticalMiles)
+        dist2lon = Dist2Lon(args.latRef[0], args.lonRef[0], Units.NauticalMiles)
+        dist2lat = Dist2Lat(args.latRef[0], args.lonRef[0], Units.NauticalMiles)
 
     circles = mkCircles(args.circle, dist2lon, dist2lat)
     eez = None if args.eez is None else gpd.read_file(args.eez)
