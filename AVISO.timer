@@ -21,7 +21,7 @@ Description=Run AVISO Mesoscale Eddy Product updater
 [Timer]
 # dayOfWeek Year-Month-Day Hour:Minute:Second
 # the AVISO product is typically updated by 06:12 UTC
-OnCalendar=*-*-* 7:00:00
+OnCalendar=7:00:00 UTC
 Persistent=true # Fire on boot if the last shot was missed
 
 [Install]
