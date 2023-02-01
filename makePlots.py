@@ -228,7 +228,9 @@ def pruneData(ds:xr.Dataset, sdate:np.datetime64, edate:np.datetime64,
     ds = ds.sel(obs=ds.obs[q])
 
     # Handle the eddy walking across the prime merdian
-    ds.longitude = np.remainder(ds.longitude) # Wrap to [0, 360)
+    logging.info("Pre  Lon limits %s to %s", np.min(ds.longitude.data), np.max(ds.longitude.data))
+    ds.longitude.data = np.remainder(ds.longitude.data, 360) # Wrap to [0, 360)
+    logging.info("Post Lon limits %s to %s", np.min(ds.longitude.data), np.max(ds.longitude.data))
 
     # This will fail for lonMin/Max that span the prime merdian
     lonMin = np.remainder(lonMin, 360) # Map to [0,360)
@@ -447,47 +449,53 @@ if __name__ == "__main__":
 
     Logger.mkLogger(args, fmt="%(asctime)s %(levelname)s: %(message)s", logLevel="INFO")
 
-    logging.info("lat/lon Ref %s %s", args.latRef, args.lonRef)
-    if ((args.latRef is None and args.lonRef is not None) \
+    logging.info("Args %s", args)
+
+    try:
+        logging.info("lat/lon Ref %s %s", args.latRef, args.lonRef)
+        if ((args.latRef is None and args.lonRef is not None)
             or (args.latRef is not None and args.lonRef is None)
             ) and (len(args.latRef) != len(args.lonRef)):
-        parser.error("You must specify the same number of instances of --latRef and --lonRef")
+            parser.error("You must specify the same number of instances of --latRef and --lonRef")
 
-    edate = np.datetime64(datetime.date.today() - datetime.timedelta(days=14)) \
-            if args.edate is None else np.datetime64(args.edate)
-    if args.sdate:
-        sdate = np.datetime64(args.sdate)
-    else:
-        sdate = edate - np.timedelta64(args.ndays, "D")
+        edate = np.datetime64(datetime.date.today() - datetime.timedelta(days=14)) \
+                if args.edate is None else np.datetime64(args.edate)
+        if args.sdate:
+            sdate = np.datetime64(args.sdate)
+        else:
+            sdate = edate - np.timedelta64(args.ndays, "D")
 
-    if args.latRef is None:
-        dist2lon = None
-        dist2lat = None
-    else:
-        dist2lon = Dist2Lon(args.latRef[0], args.lonRef[0], Units.NauticalMiles)
-        dist2lat = Dist2Lat(args.latRef[0], args.lonRef[0], Units.NauticalMiles)
+        if args.latRef is None:
+            dist2lon = None
+            dist2lat = None
+        else:
+            dist2lon = Dist2Lon(args.latRef[0], args.lonRef[0], Units.NauticalMiles)
+            dist2lat = Dist2Lat(args.latRef[0], args.lonRef[0], Units.NauticalMiles)
 
-    circles = mkCircles(args.circle, dist2lon, dist2lat)
-    eez = None if args.eez is None else gpd.read_file(args.eez)
+        circles = mkCircles(args.circle, dist2lon, dist2lat)
+        eez = None if args.eez is None else gpd.read_file(args.eez)
 
-    os.makedirs(args.png, mode=0o755, exist_ok=True)
-    os.makedirs(args.mp4, mode=0o755, exist_ok=True)
-    os.makedirs(args.shp, mode=0o755, exist_ok=True)
-    os.makedirs(args.ftpSaveTo, mode=0o755, exist_ok=True)
+        os.makedirs(args.png, mode=0o755, exist_ok=True)
+        os.makedirs(args.mp4, mode=0o755, exist_ok=True)
+        os.makedirs(args.shp, mode=0o755, exist_ok=True)
+        os.makedirs(args.ftpSaveTo, mode=0o755, exist_ok=True)
 
-    a = FTPfetch(args)
-    if args.fetchonly:
-        logging.info("Only fetching")
-        sys.exit(0)
-    images = set()
-    with xr.open_dataset(a.cyclonic()) as dsC, xr.open_dataset(a.anticyclonic()) as dsA:
-        dsC = pruneData(dsC, sdate, edate, args.latMin, args.latMax, args.lonMin, args.lonMax)
-        dsA = pruneData(dsA, sdate, edate, args.latMin, args.latMax, args.lonMin, args.lonMax)
-        for date in np.arange(sdate, edate+np.timedelta64(1,"D")): # Loop over dates making images
-            # Generate the image for a date, if needed
-            fn = doDate(dsC, dsA, date, args, dist2lat, dist2lon, circles, eez)
-            if fn is not None:
-                images.add(fn)
+        a = FTPfetch(args)
+        if args.fetchonly:
+            logging.info("Only fetching")
+            sys.exit(0)
+        images = set()
+        with xr.open_dataset(a.cyclonic()) as dsC, xr.open_dataset(a.anticyclonic()) as dsA:
+            dsC = pruneData(dsC, sdate, edate, args.latMin, args.latMax, args.lonMin, args.lonMax)
+            dsA = pruneData(dsA, sdate, edate, args.latMin, args.latMax, args.lonMin, args.lonMax)
+            for date in np.arange(sdate, edate+np.timedelta64(1,"D")):
+                # Loop over dates making images
+                # Generate the image for a date, if needed
+                fn = doDate(dsC, dsA, date, args, dist2lat, dist2lon, circles, eez)
+                if fn is not None:
+                    images.add(fn)
 
-    if not args.skipmovies and len(images): # Some images to turn into a movie
-        mkMovie(images, args)
+        if not args.skipmovies and len(images): # Some images to turn into a movie
+            mkMovie(images, args)
+    except:
+        logging.exception("Args %s", args)
