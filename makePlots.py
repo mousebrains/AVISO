@@ -52,7 +52,7 @@ class RetrieveFile:
         sz = self.__size / 1024 / 1024
         frac = "{:.1f}".format(100 * sz / self.__targetSize)
         if not self.__qProgress and (frac != self.__frac):
-            logging.info(f"{sz:.1f}/{self.__targetSize:.1f}MB {frac}%")
+            logging.debug(f"{sz:.1f}/{self.__targetSize:.1f}MB {frac}%")
             self.__frac = frac
 
 class FTPfetch:
