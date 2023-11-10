@@ -22,7 +22,7 @@ $mypath/makePlots.py \
 	--ftpCredentials=$CREDENTIALS \
 	--ndays=120 \
 	--ftpSaveTo=$ftpDir \
-	--eez=$mypath/eez_boundaries_v11.gpkg \
+	--eez=$mypath/eez_boundaries_v12.gpkg \
 	--latMin=5 \
 	--latMax=30 \
 	--lonMin=116 \
