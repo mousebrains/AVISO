@@ -309,6 +309,11 @@ def doDate(dsC:xr.Dataset, dsA:xr.Dataset, date:np.datetime64, args:ArgumentPars
         logging.info("No anticyclonic data for %s", date)
         return None
 
+    contourC = gpd.GeoDataFrame(contourC) # Get past a fiona typing issue
+    contourA = gpd.GeoDataFrame(contourA) # Get past a fiona typing issue
+    trkC     = gpd.GeoDataFrame(trkC) # Get past a fiona typing issue
+    trkA     = gpd.GeoDataFrame(trkA) # Get past a fiona typing issue
+
     logging.info("Saving %s", shpC)
     contourC.to_file(shpC)
     logging.info("Saving %s", shpA)
@@ -331,6 +336,7 @@ def doDate(dsC:xr.Dataset, dsA:xr.Dataset, date:np.datetime64, args:ArgumentPars
         eez.plot(ax=ax, color="green")
         tit.append("Green-EEZ")
     if circles is not None:
+        circles = gpd.GeoDataFrame(circles)
         circles.plot(ax=ax, color="grey")
         tit.append("Grey-Circle")
     ax.plot(np.array(args.lonRef), np.array(args.latRef), "8k")
